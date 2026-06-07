@@ -1,6 +1,6 @@
 # Clase Producto
 
-# modelos/producto.py
+# modelo/producto.py
 import re
 from enum import Enum
 

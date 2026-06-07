@@ -1,8 +1,8 @@
 # controladores
-from modelos.cliente import Cliente
-from modelos.proveedor import Proveedor, RubroProveedor
-from modelos.producto import Producto, CategoriaProducto
-from modelos.orden import Orden, OrdenCompra, OrdenVenta, EstadoOrden
+from modelo.cliente import Cliente
+from modelo.proveedor import Proveedor, RubroProveedor
+from modelo.producto import Producto, CategoriaProducto
+from modelo.orden import Orden, OrdenCompra, OrdenVenta, EstadoOrden
 
 class GestorSistema:
     def __init__(self):
