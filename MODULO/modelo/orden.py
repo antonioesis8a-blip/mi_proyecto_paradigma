@@ -1,6 +1,6 @@
 # modelos/orden.py
 from enum import Enum
-from modelos.producto import Producto
+from modelo.producto import Producto
 
 
 

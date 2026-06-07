@@ -4,9 +4,9 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from controladores.gestor_sistema import GestorSistema
+from controladores.controlador import GestorSistema
 from constantes import OPCIONES_MENU, MSG_BIENVENIDA, MSG_DESPEDIDA
-from modelos.orden import EstadoOrden
+from modelo.orden import EstadoOrden
 
 class VistaConsola:
     def __init__(self):
