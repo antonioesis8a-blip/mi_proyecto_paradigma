@@ -3,6 +3,7 @@ import re
 from enum import Enum
 
 class RubroProveedor(Enum):
+    """Enumeración que representa los posibles rubros de un proveedor."""
     ELECTRONICA = "Electrónica"
     ALIMENTOS = "Alimentos"
     ROPA = "Ropa"
@@ -11,6 +12,7 @@ class RubroProveedor(Enum):
     INFORMATICA = "Informática"
 
 class Proveedor:
+    """Clase que representa a un proveedor en el sistema de gestión de ventas."""
     def __init__(self, id_proveedor, cuit_proveedor, razon_social, email_proveedor, telefono, direccion, rubro):        
         self.id_proveedor = id_proveedor
         self.cuit_proveedor = cuit_proveedor
@@ -22,6 +24,7 @@ class Proveedor:
     
     @property
     def id_proveedor(self) -> str:
+        """Obtiene el ID del proveedor."""
         return self.__id_proveedor
     
     @id_proveedor.setter
@@ -32,6 +35,7 @@ class Proveedor:
     
     @property
     def cuit_proveedor(self) -> str:
+        """Obtiene el CUIT del proveedor."""
         return self.__cuit_proveedor
 
     @cuit_proveedor.setter
@@ -43,6 +47,7 @@ class Proveedor:
     
     @property
     def razon_social(self) -> str:
+        """Obtiene la razón social del proveedor."""
         return self.__razon_social
     
     @razon_social.setter
@@ -53,6 +58,7 @@ class Proveedor:
     
     @property
     def email_proveedor(self) -> str:
+        """Obtiene el email del proveedor."""
         return self.__email_proveedor
     
     @email_proveedor.setter
@@ -64,6 +70,7 @@ class Proveedor:
     
     @property
     def telefono(self) -> str:
+        """Obtiene el teléfono del proveedor."""
         return self.__telefono
     
     @telefono.setter
@@ -75,6 +82,7 @@ class Proveedor:
     
     @property
     def direccion(self) -> str:
+        """Obtiene la dirección del proveedor."""
         return self.__direccion
     
     @direccion.setter
@@ -85,6 +93,7 @@ class Proveedor:
     
     @property
     def rubro(self) -> RubroProveedor:
+        """Obtiene el rubro del proveedor."""
         return self.__rubro
     
     @rubro.setter
