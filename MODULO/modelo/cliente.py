@@ -2,6 +2,7 @@
 import re
 
 class Cliente:
+    """Clase que representa a un cliente en el sistema de gestión de ventas."""
     def __init__(self, id_cliente, nombre, email, telefono, direccion):
         self.id_cliente = id_cliente
         self.nombre = nombre
@@ -11,6 +12,7 @@ class Cliente:
     
     @property
     def id_cliente(self) -> str:
+        """Obtiene el ID del cliente."""
         return self.__id_cliente
     
     @id_cliente.setter
@@ -21,6 +23,7 @@ class Cliente:
     
     @property
     def nombre(self) -> str:
+        """Obtiene el nombre del cliente."""
         return self.__nombre
     
     @nombre.setter
@@ -31,6 +34,7 @@ class Cliente:
     
     @property
     def email(self) -> str:
+        """Obtiene el email del cliente."""
         return self.__email
     
     @email.setter
@@ -42,6 +46,7 @@ class Cliente:
         
     @property
     def telefono(self) -> str:
+        """Obtiene el teléfono del cliente."""
         return self.__telefono
     
     @telefono.setter
@@ -53,6 +58,7 @@ class Cliente:
     
     @property
     def direccion(self) -> str:
+        """Obtiene la dirección del cliente."""
         return self.__direccion
     
     @direccion.setter
@@ -62,4 +68,4 @@ class Cliente:
         self.__direccion = valor_direccion.strip()
     
     def __str__(self) -> str:
-        return f"[Cliente] ID: {self.id_cliente} | Nombre: {self.nombre} | Email: {self.email}"
+        return f"[Cliente] ID: {self.id_cliente} | Nombre: {self.nombre} | Email: {self.email} | Teléfono: {self.telefono} | Dirección: {self.direccion}"
