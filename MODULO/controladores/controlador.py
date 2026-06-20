@@ -69,6 +69,7 @@ class GestorSistema:
         return nuevo_prov
 
     def buscar_persona(self, identificacion: str):
+        """Busca un cliente o proveedor por su identificación única."""
         for pers in self.__personas:
             if isinstance(pers, Cliente) and pers.id_cliente == identificacion:
                 return pers
@@ -78,6 +79,7 @@ class GestorSistema:
 
     # --- Gestión de Órdenes Comerciales ---
     def crear_orden_compra(self, id_proveedor: str, fecha: str) -> OrdenCompra:
+        """Crea una nueva orden de compra asociada a un proveedor específico."""
         persona = self.buscar_persona(id_proveedor)
         if not isinstance(persona, Proveedor):
             raise ValueError("Error: La identificación no pertenece a un Proveedor.")
@@ -88,6 +90,7 @@ class GestorSistema:
         return nueva_orden
 
     def crear_orden_venta(self, id_cliente: str, fecha: str) -> OrdenVenta:
+        """Crea una nueva orden de venta asociada a un cliente específico."""
         persona = self.buscar_persona(id_cliente)
         if not isinstance(persona, Cliente):
             raise ValueError("Error: La identificación no pertenece a un Cliente.")
@@ -98,6 +101,7 @@ class GestorSistema:
         return nueva_orden
 
     def buscar_orden(self, nro_orden: int) -> Orden:
+        """Busca una orden por su número de orden."""
         for orden in self.__ordenes:
             if int(orden.id_orden) == int(nro_orden):
                 return orden
@@ -105,13 +109,25 @@ class GestorSistema:
 
     # --- Estadísticas del Sistema ---
     def obtener_estadisticas(self) -> dict:
+        """ Calcula y retorna estadísticas generales del sistema, incluyendo tipos de operaciones y movimientos."""
         clientes = [p for p in self.__personas if isinstance(p, Cliente)]
         proveedores = [p for p in self.__personas if isinstance(p, Proveedor)]
-        
+
+        # ESTADOS ADMINISTRATIVOS
         activas = [o for o in self.__ordenes if o.estado == EstadoOrden.EN_PROCESO]
         pendientes = [o for o in self.__ordenes if o.estado == EstadoOrden.PENDIENTE]
         finalizadas = [o for o in self.__ordenes if o.estado == EstadoOrden.COMPLETADA]
+        canceladas = [o for o in self.__ordenes if o.estado == EstadoOrden.CANCELADA]
+
+         # TIPOS DE OPERACIONES COMERCIALES
+        ordenes_compra = [o for o in self.__ordenes if isinstance(o, OrdenCompra)]
+        ordenes_venta = [o for o in self.__ordenes if isinstance(o, OrdenVenta)]
+
+        # MOVIMIENTOS COMERCIALES
+        monto_compras = sum(o.calcular_total() for o in ordenes_compra if o.estado == EstadoOrden.COMPLETADA)
+        monto_ventas = sum(o.calcular_total() for o in ordenes_venta if o.estado == EstadoOrden.COMPLETADA)
         
+        # Búsqueda de extremos
         orden_mayor = max(self.__ordenes, key=lambda o: o.calcular_total(), default=None)
         orden_menor = min(self.__ordenes, key=lambda o: o.calcular_total(), default=None)
 
@@ -119,9 +135,21 @@ class GestorSistema:
             "total_productos": len(self.__productos),
             "total_clientes": len(clientes),
             "total_proveedores": len(proveedores),
+            
+            # Información de Estados
             "ordenes_pendientes": len(pendientes),
-            "ordenes_activas": len(activas),
+            "ordenes_activas_(en proceso)": len(activas),
             "ordenes_finalizadas": len(finalizadas),
+            "ordenes_canceladas": len(canceladas),
+            
+            # Información de Operaciones
+            "total_ordenes_compra": len(ordenes_compra),
+            "total_ordenes_venta": len(ordenes_venta),
+            
+            # Movimientos Comerciales
+            "monto_total_compras_concretadas": f"${monto_compras:.2f}",
+            "monto_total_ventas_concretadas": f"${monto_ventas:.2f}",
+            
             "orden_mayor_volumen": f"Orden N° {orden_mayor.id_orden} (${orden_mayor.calcular_total():.2f})" if orden_mayor else "N/A",
             "orden_menor_volumen": f"Orden N° {orden_menor.id_orden} (${orden_menor.calcular_total():.2f})" if orden_menor else "N/A",
         }
