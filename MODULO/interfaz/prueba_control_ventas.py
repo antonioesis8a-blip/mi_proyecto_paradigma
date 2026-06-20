@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from controladores.controlador import GestorSistema
 from constantes import OPCIONES_MENU, MSG_BIENVENIDA, MSG_DESPEDIDA
 from modelo.orden import EstadoOrden
+from modelo.orden import ItemOrden
 
 class VistaConsola:
     def __init__(self):
@@ -90,13 +91,24 @@ class VistaConsola:
             print("\n--- ASOCIAR PRODUCTO A ÓRDEN ---")
             try:
                 nro_o = int(input("Número de la orden: "))
-                cant = int(input("Cantidad: "))
-            except ValueError:
-                raise ValueError("Debe ingresar números enteros.")
+            except ValueError as exc:
+                raise ValueError("El número de la orden debe ser un número entero.") from exc
+            
+             # RECUPERAMOS LA ORDEN DESDE EL CONTROLADOR
+            orden = self.controlador.buscar_orden(nro_o)
+            
             cod_p = input("Código del producto (PROD-XXXX): ")
             producto = self.controlador.buscar_producto(cod_p)
-            cant = int(input(f"Cantidad de '{producto.nombre_producto}': "))
-            orden.agregar_producto(producto, cant)
+            
+            try:
+                cant = int(input(f"Cantidad de '{producto.nombre_producto}': "))
+            except ValueError as exc:
+                raise ValueError("La cantidad debe ser un número entero.") from exc
+            
+             # CREAMOS EL ÍTEM Y LO AGREGAMOS A LA ORDEN
+            nuevo_item = ItemOrden(producto, cant)
+            orden.agregar_item(nuevo_item)
+            
             print(f"¡Éxito! Producto asociado. Total actual de la orden: ${orden.calcular_total():.2f}")
 
         elif opcion == "6":
