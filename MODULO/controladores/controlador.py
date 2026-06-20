@@ -1,156 +1,150 @@
-# controladores
+# controladores/controlador.py
+
 from modelo.cliente import Cliente
 from modelo.proveedor import Proveedor, RubroProveedor
 from modelo.producto import Producto, CategoriaProducto
 from modelo.orden import Orden, OrdenCompra, OrdenVenta, EstadoOrden
+from modelo.excepciones import EntidadDuplicadaError, ValidationError
 
 class GestorSistema:
+    """Clase del Controlador (Controller) encargada de gestionar las colecciones globales,
+    coordinar las operaciones comerciales y aplicar reglas de negocio del dominio."""
+
     def __init__(self):
         self.__productos = []
-        self.__personas = []  # Contiene tanto Clientes como Proveedores
+        self.__personas = [] 
         self.__ordenes = []
         self.__contador_ordenes = 0  
 
     @property
-    def productos(self):
+    def productos(self) -> list:
+        """Retorna la lista de productos registrados en el sistema."""
         return self.__productos
 
     @property
-    def personas(self):
+    def personas(self) -> list:
+        """Retorna la lista de actores (clientes y proveedores) registrados."""
         return self.__personas
 
     @property
-    def ordenes(self):
+    def ordenes(self) -> list:
+        """Retorna la lista de órdenes registradas en el sistema."""
         return self.__ordenes
 
     # --- Gestión de Productos ---
     def registrar_producto(self, codigo: str, nombre: str, descripcion: str, precio: float, stock: int, categoria_str: str) -> Producto:
+        """Registra un nuevo producto, asegurando la unicidad del código identificador."""
         for prod in self.__productos:
             if prod.id_producto == codigo:
-                raise ValueError(f"Error: Ya existe un producto con el código '{codigo}'.")
+                raise EntidadDuplicadaError(f"Error funcional: Ya existe un producto registrado bajo el código '{codigo}'.")
         
+        # Mapeo y validación de la categoría ingresada por string hacia su tipo Enum
         try:
-            categoria = CategoriaProducto[categoria_str.upper()]
+            categoria_enum = CategoriaProducto[categoria_str.upper()]
         except KeyError:
-            raise ValueError("Categoría inválida.")
+            valores_validos = [c.name for c in CategoriaProducto]
+            raise ValidationError(f"La categoría '{categoria_str}' no es válida. Opciones: {', '.join(valores_validos)}")
 
-        nuevo_prod = Producto(codigo, nombre, descripcion, precio, stock, categoria)
+        nuevo_prod = Producto(codigo, nombre, descripcion, precio, stock, categoria_enum)
         self.__productos.append(nuevo_prod)
         return nuevo_prod
 
-    def buscar_producto(self, codigo: str) -> Producto:
-        for prod in self.__productos:
-            if prod.id_producto == codigo:
-                return prod
-        raise ValueError(f"Error: El producto '{codigo}' no existe.")
-
-    # --- Gestión de Clientes y Proveedores ---
-    def registrar_cliente(self, identificacion: str, nombre: str, email: str, telefono: str, direccion: str) -> Cliente:
-        for pers in self.__personas:
-            if isinstance(pers, Cliente) and pers.id_cliente == identificacion:
-                raise ValueError("Error: Ya existe un cliente con esa identificación.")
+    # --- Gestión de Actores (Clientes y Proveedores) ---
+    def registrar_cliente(self, id_cliente: str, nombre: str, email: str, telefono: str, direccion: str) -> Cliente:
+        """Registra un nuevo cliente en el sistema, controlando duplicados mediante excepción propia."""
+        for p in self.__personas:
+            if isinstance(p, Cliente) and p.id_cliente == id_cliente:
+                raise EntidadDuplicadaError(f"Error funcional: Ya existe un cliente registrado bajo el ID '{id_cliente}'.")
         
-        nuevo_cli = Cliente(identificacion, nombre, email, telefono, direccion)
-        self.__personas.append(nuevo_cli)
-        return nuevo_cli
+        nuevo_cliente = Cliente(id_cliente, nombre, email, telefono, direccion)
+        self.__personas.append(nuevo_cliente)
+        return nuevo_cliente
 
-    def registrar_proveedor(self, identificacion: str, cuit: str, razon_social: str, email: str, telefono: str, direccion: str, rubro_str: str) -> Proveedor:
-        for pers in self.__personas:
-            if isinstance(pers, Proveedor) and pers.id_proveedor == identificacion:
-                raise ValueError("Error: Ya existe un proveedor con esa identificación.")
+    def registrar_proveedor(self, id_proveedor: str, cuit: str, razon_social: str, email: str, telefono: str, direccion: str, rubro_str: str) -> Proveedor:
+        """Registra un nuevo proveedor en el sistema, controlando duplicados y mapeando su Enum."""
+        for p in self.__personas:
+            if isinstance(p, Proveedor) and p.id_proveedor == id_proveedor:
+                raise EntidadDuplicadaError(f"Error funcional: Ya existe un proveedor registrado bajo el ID '{id_proveedor}'.")
         
+        # Mapeo y validación del rubro ingresado por string hacia su tipo Enum
         try:
-            rubro = RubroProveedor[rubro_str.upper()]
+            rubro_enum = RubroProveedor[rubro_str.upper()]
         except KeyError:
-            raise ValueError("Rubro inválido de proveedor.")
+            valores_validos = [r.name for r in RubroProveedor]
+            raise ValidationError(f"El rubro '{rubro_str}' no es válido. Opciones: {', '.join(valores_validos)}")
 
-        nuevo_prov = Proveedor(identificacion, cuit, razon_social, email, telefono, direccion, rubro)
+        nuevo_prov = Proveedor(id_proveedor, cuit, razon_social, email, telefono, direccion, rubro_enum)
         self.__personas.append(nuevo_prov)
         return nuevo_prov
 
-    def buscar_persona(self, identificacion: str):
-        """Busca un cliente o proveedor por su identificación única."""
-        for pers in self.__personas:
-            if isinstance(pers, Cliente) and pers.id_cliente == identificacion:
-                return pers
-            if isinstance(pers, Proveedor) and pers.id_proveedor == identificacion:
-                return pers
-        raise ValueError(f"La persona con ID '{identificacion}' no existe.")
-
-    # --- Gestión de Órdenes Comerciales ---
-    def crear_orden_compra(self, id_proveedor: str, fecha: str) -> OrdenCompra:
-        """Crea una nueva orden de compra asociada a un proveedor específico."""
-        persona = self.buscar_persona(id_proveedor)
-        if not isinstance(persona, Proveedor):
-            raise ValueError("Error: La identificación no pertenece a un Proveedor.")
+    # --- Gestión de Órdenes Transaccionales ---
+    def crear_orden_compra(self, fecha: str, id_proveedor: str) -> OrdenCompra:
+        """Genera una nueva Orden de Compra vinculada a un proveedor existente."""
+        proveedor = next((p for p in self.__personas if isinstance(p, Proveedor) and p.id_proveedor == id_proveedor), None)
+        if not proveedor:
+            raise ValidationError(f"No se encontró ningún proveedor registrado bajo el ID '{id_proveedor}'.")
         
         self.__contador_ordenes += 1
-        nueva_orden = OrdenCompra(self.__contador_ordenes, fecha, persona)
+        nueva_orden = OrdenCompra(self.__contador_ordenes, fecha, proveedor)
         self.__ordenes.append(nueva_orden)
         return nueva_orden
 
-    def crear_orden_venta(self, id_cliente: str, fecha: str) -> OrdenVenta:
-        """Crea una nueva orden de venta asociada a un cliente específico."""
-        persona = self.buscar_persona(id_cliente)
-        if not isinstance(persona, Cliente):
-            raise ValueError("Error: La identificación no pertenece a un Cliente.")
+    def crear_orden_venta(self, fecha: str, id_cliente: str) -> OrdenVenta:
+        """Genera una nueva Orden de Venta vinculada a un cliente existente."""
+        cliente = next((p for p in self.__personas if isinstance(p, Cliente) and p.id_cliente == id_cliente), None)
+        if not cliente:
+            raise ValidationError(f"No se encontró ningún cliente registrado bajo el ID '{id_cliente}'.")
         
         self.__contador_ordenes += 1
-        nueva_orden = OrdenVenta(self.__contador_ordenes, fecha, persona)
+        nueva_orden = OrdenVenta(self.__contador_ordenes, fecha, cliente)
         self.__ordenes.append(nueva_orden)
         return nueva_orden
-
-    def buscar_orden(self, nro_orden: int) -> Orden:
-        """Busca una orden por su número de orden."""
-        for orden in self.__ordenes:
-            if int(orden.id_orden) == int(nro_orden):
-                return orden
-        raise ValueError(f"Error: La orden N° {nro_orden} no existe.")
 
     # --- Estadísticas del Sistema ---
     def obtener_estadisticas(self) -> dict:
-        """ Calcula y retorna estadísticas generales del sistema, incluyendo tipos de operaciones y movimientos."""
+        """Calcula y retorna estadísticas analíticas completas sobre el inventario,
+        las operaciones, estados administrativos y movimientos comerciales financieros."""
         clientes = [p for p in self.__personas if isinstance(p, Cliente)]
         proveedores = [p for p in self.__personas if isinstance(p, Proveedor)]
-
-        # ESTADOS ADMINISTRATIVOS
-        activas = [o for o in self.__ordenes if o.estado == EstadoOrden.EN_PROCESO]
+        
+        # 1. AUDITORÍA DE ESTADOS ADMINISTRATIVOS
         pendientes = [o for o in self.__ordenes if o.estado == EstadoOrden.PENDIENTE]
+        activas = [o for o in self.__ordenes if o.estado == EstadoOrden.EN_PROCESO]
         finalizadas = [o for o in self.__ordenes if o.estado == EstadoOrden.COMPLETADA]
         canceladas = [o for o in self.__ordenes if o.estado == EstadoOrden.CANCELADA]
-
-         # TIPOS DE OPERACIONES COMERCIALES
+        
+        # 2. AUDITORÍA POR TIPOS DE OPERACIONES 
         ordenes_compra = [o for o in self.__ordenes if isinstance(o, OrdenCompra)]
         ordenes_venta = [o for o in self.__ordenes if isinstance(o, OrdenVenta)]
-
-        # MOVIMIENTOS COMERCIALES
+        
+        # 3. MOVIMIENTOS COMERCIALES (Flujos financieros monetarios de transacciones concretadas)
         monto_compras = sum(o.calcular_total() for o in ordenes_compra if o.estado == EstadoOrden.COMPLETADA)
         monto_ventas = sum(o.calcular_total() for o in ordenes_venta if o.estado == EstadoOrden.COMPLETADA)
         
-        # Búsqueda de extremos
+        # Búsqueda de extremos volumétricos
         orden_mayor = max(self.__ordenes, key=lambda o: o.calcular_total(), default=None)
         orden_menor = min(self.__ordenes, key=lambda o: o.calcular_total(), default=None)
 
         stats = {
-            "total_productos": len(self.__productos),
-            "total_clientes": len(clientes),
-            "total_proveedores": len(proveedores),
+            "total_productos_en_catalogo": len(self.__productos),
+            "total_clientes_registrados": len(clientes),
+            "total_proveedores_registrados": len(proveedores),
             
-            # Información de Estados
-            "ordenes_pendientes": len(pendientes),
-            "ordenes_activas_(en proceso)": len(activas),
-            "ordenes_finalizadas": len(finalizadas),
-            "ordenes_canceladas": len(canceladas),
+            # Desglose de Estados
+            "ordenes_en_estado_pendiente": len(pendientes),
+            "ordenes_en_estado_en_proceso": len(activas),
+            "ordenes_en_estado_completada": len(finalizadas),
+            "ordenes_en_estado_cancelada": len(canceladas),
             
-            # Información de Operaciones
-            "total_ordenes_compra": len(ordenes_compra),
-            "total_ordenes_venta": len(ordenes_venta),
+            # Desglose de Operaciones
+            "total_ordenes_de_compra_emitidas": len(ordenes_compra),
+            "total_ordenes_de_venta_emitidas": len(ordenes_venta),
             
-            # Movimientos Comerciales
+            # Movimientos de Caja / Financieros Concretados
             "monto_total_compras_concretadas": f"${monto_compras:.2f}",
             "monto_total_ventas_concretadas": f"${monto_ventas:.2f}",
             
-            "orden_mayor_volumen": f"Orden N° {orden_mayor.id_orden} (${orden_mayor.calcular_total():.2f})" if orden_mayor else "N/A",
-            "orden_menor_volumen": f"Orden N° {orden_menor.id_orden} (${orden_menor.calcular_total():.2f})" if orden_menor else "N/A",
+            "orden_de_mayor_volumen_monetario": f"Orden N° {orden_mayor.id_orden} (${orden_mayor.calcular_total():.2f})" if orden_mayor else "N/A",
+            "orden_de_menor_volumen_monetario": f"Orden N° {orden_menor.id_orden} (${orden_menor.calcular_total():.2f})" if orden_menor else "N/A",
         }
         return stats
