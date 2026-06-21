@@ -104,3 +104,6 @@ class Proveedor:
     
     def __str__(self):
         return f"[Proveedor] ID: {self.id_proveedor} | Razón Social: {self.razon_social} | Rubro: {self.rubro.value}"
+
+    def __repr__(self):
+        return f"Proveedor(id_proveedor='{self.id_proveedor}', razon_social='{self.razon_social}', rubro={self.rubro})"

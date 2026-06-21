@@ -15,3 +15,11 @@ OPCIONES_MENU = {
 
 MSG_BIENVENIDA = "=== BIENVENIDO AL SISTEMA DE CONTROL DE ÓRDENES ==="
 MSG_DESPEDIDA = "¡Gracias por usar el sistema! Finalizando ejecución..."
+
+
+# EXPRESIONES REGULARES CENTRALIZADAS
+
+PATRON_PRODUCTO_ID = r"^PROD-\d{4}$"
+PATRON_TELEFONO = r"^\+?\d{10,15}$"
+PATRON_EMAIL = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+PATRON_CUIT = r"^\d{2}-\d{8}-\d{1}$" # Formato clásico XX-XXXXXXXX-X
